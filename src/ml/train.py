@@ -1,8 +1,11 @@
 """Fine-tune a ResNet-18 ImageNet model on the Oxford-IIIT Pet dataset.
 
+This example uses Hydra to manage the configuration. For information on Hydra, see https://hydra.cc/.
+
 Usage:
 
-TODO: Add usage example.
+    python train.py
+        mlflow_tracking_uri=$(az ml workspace show --query mlflow_tracking_uri)
 """
 
 import hydra
@@ -11,6 +14,7 @@ import torch
 import torchvision.datasets as datasets
 import torchvision.transforms.v2 as transforms
 from data.subset_dataset import SubsetDataset
+from lightning.pytorch.loggers import MLFlowLogger
 from models.classifier import Classifier
 from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, random_split
@@ -73,7 +77,12 @@ def main(cfg: DictConfig) -> None:
         num_workers=cfg.dataloader_workers,
     )
 
-    trainer = L.Trainer(max_epochs=cfg.max_epochs, fast_dev_run=cfg.fast_dev_run)
+    mlf_logger = MLFlowLogger(
+        experiment_name="lightning_logs", tracking_uri=cfg.mlflow_tracking_uri
+    )
+    trainer = L.Trainer(
+        max_epochs=cfg.max_epochs, fast_dev_run=cfg.fast_dev_run, logger=mlf_logger
+    )
     trainer.fit(classifier, train_loader, val_loader)
 
 

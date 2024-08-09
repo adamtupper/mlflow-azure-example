@@ -8,3 +8,4 @@ lr: 1e-5
 fast_dev_run: False
 dataloader_workers: 7
 dataset_dir: ~/Downloads
+mlflow_tracking_uri: ???
