@@ -1,66 +1,57 @@
-"""Fine-tune a ResNet-18 ImageNet model on the Oxford-IIIT Pet dataset.
+"""Fine-tune a ResNet-18 ImageNet model on the RetinaMNIST dataset.
 
 This example uses Hydra to manage the configuration. For information on Hydra, see https://hydra.cc/.
 
 Usage:
 
     python train.py
+        dataset_dir=~/Downloads
         mlflow_tracking_uri=$(az ml workspace show --query mlflow_tracking_uri)
 """
 
 import hydra
 import lightning as L
+import medmnist
 import torch
-import torchvision.datasets as datasets
 import torchvision.transforms.v2 as transforms
-from data.subset_dataset import SubsetDataset
 from lightning.pytorch.loggers import MLFlowLogger
 from models.classifier import Classifier
 from omegaconf import DictConfig, OmegaConf
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader
 from torchvision.models import ResNet18_Weights, resnet18
 
-NUM_CLASSES = 37
+NUM_CLASSES = 5
 
 
 @hydra.main(version_base=None, config_path="./config", config_name="config")
 def main(cfg: DictConfig) -> None:
     print(OmegaConf.to_yaml(cfg))
 
-    # Load the training and validation data
-    train_val_dataset = datasets.OxfordIIITPet(
-        root=cfg.dataset_dir, split="trainval", download=True
-    )
-
     # Define the training and validation transforms
     transform_train = transforms.Compose(
         [
-            transforms.RandomResizedCrop(224),
             transforms.RandAugment(),
             transforms.ToImage(),
             transforms.ToDtype(torch.float32, scale=True),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ]
     )
     transform_val = transforms.Compose(
         [
-            transforms.Resize(224),
-            transforms.CenterCrop(224),
             transforms.ToImage(),
             transforms.ToDtype(torch.float32, scale=True),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ]
     )
 
-    # Split the data into training (80%) and validation (20%) sets
-    train_size = int(0.8 * len(train_val_dataset))
-    val_size = len(train_val_dataset) - train_size
-    train_subset, val_subset = random_split(train_val_dataset, [train_size, val_size])
-    train_dataset = SubsetDataset(train_subset, transform=transform_train)
-    val_dataset = SubsetDataset(val_subset, transform=transform_val)
+    # Load the training and validation data
+    train_dataset = medmnist.RetinaMNIST(
+        split="train", download=True, size=224, transform=transform_train, root=cfg.dataset_dir
+    )
+    val_dataset = medmnist.RetinaMNIST(
+        split="val", download=True, size=224, transform=transform_val, root=cfg.dataset_dir
+    )
 
-    # Load the pre-trained ResNet-18 model (modify the output layer to match the number of classes in the Oxford-IIIT
-    # Pet dataset)
+    # Load the pre-trained ResNet-18 model (modify the output layer to match the number of classes in the RetinaMNIST
+    # dataset)
     model = resnet18(weights=ResNet18_Weights.DEFAULT)
     model.fc = model.fc = torch.nn.Linear(model.fc.in_features, NUM_CLASSES)
     classifier = Classifier(model, lr=cfg.lr)
@@ -79,11 +70,12 @@ def main(cfg: DictConfig) -> None:
         num_workers=cfg.dataloader_workers,
     )
 
-    mlf_logger = MLFlowLogger(
-        experiment_name="lightning_logs", tracking_uri=cfg.mlflow_tracking_uri
-    )
+    mlf_logger = MLFlowLogger(experiment_name="lightning_logs", tracking_uri=cfg.mlflow_tracking_uri)
     trainer = L.Trainer(
-        max_epochs=cfg.max_epochs, fast_dev_run=cfg.fast_dev_run, logger=mlf_logger
+        max_epochs=cfg.max_epochs,
+        fast_dev_run=cfg.fast_dev_run,
+        logger=mlf_logger,
+        log_every_n_steps=25,
     )
     trainer.fit(classifier, train_loader, val_loader)
 

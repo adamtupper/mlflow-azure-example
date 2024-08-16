@@ -1,4 +1,4 @@
-"""Define a PyTorch Lightning module for training  a multi-class classification model."""
+"""Define a PyTorch Lightning module for training a multi-class classification model."""
 
 import lightning as L
 import torch
@@ -25,20 +25,22 @@ class Classifier(L.LightningModule):
 
     def training_step(self, batch: torch.Tensor, batch_idx: int) -> torch.Tensor:
         x, y = batch
+        y = y.squeeze().long()
         y_hat = self(x)
         loss = self.criterion(y_hat, y)
-        
+
         self.log("train_loss", loss)
         self.train_acc(y_hat, y)
-        self.log('train_acc_step', self.train_acc)
-        
+        self.log("train_acc_step", self.train_acc)
+
         return loss
-    
+
     def on_train_epoch_end(self):
-        self.log('train_acc_epoch', self.train_acc)
+        self.log("train_acc_epoch", self.train_acc)
 
     def validation_step(self, batch: torch.Tensor, batch_idx: int) -> torch.Tensor:
         x, y = batch
+        y = y.squeeze().long()
         y_hat = self(x)
         loss = self.criterion(y_hat, y)
         self.log("val_loss", loss)
@@ -47,10 +49,10 @@ class Classifier(L.LightningModule):
         self.confusion_matrix(y_hat, y)
 
         return loss
-    
+
     def on_validation_epoch_end(self):
         # Log scalar metrics
-        self.log('val_acc_epoch', self.val_acc)
+        self.log("val_acc_epoch", self.val_acc)
 
         # Log confusion matrix
         fig, _ = self.confusion_matrix.plot()
@@ -58,9 +60,7 @@ class Classifier(L.LightningModule):
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer, mode="min", factor=0.1, patience=5
-        )
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=0.1, patience=5)
 
         return {
             "optimizer": optimizer,

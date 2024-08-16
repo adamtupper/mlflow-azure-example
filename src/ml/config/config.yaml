@@ -7,5 +7,5 @@ max_epochs: 10
 lr: 1e-5
 fast_dev_run: False
 dataloader_workers: 7
-dataset_dir: ~/Downloads
+dataset_dir: ???
 mlflow_tracking_uri: ???
