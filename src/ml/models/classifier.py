@@ -4,6 +4,7 @@ import lightning as L
 import matplotlib.pyplot as plt
 import torch
 from torchmetrics.classification import Accuracy, ConfusionMatrix, AveragePrecision
+from torchvision.utils import make_grid
 
 
 class Classifier(L.LightningModule):
@@ -37,6 +38,10 @@ class Classifier(L.LightningModule):
         self.train_map(y_hat, y)
         self.log("train_acc_step", self.train_acc)
         self.log("train_ap_step", self.train_map)
+
+        if self.current_epoch == 0 and batch_idx == 0:
+            # Log the first batch of images
+            self._log_examples(x)
 
         return loss
 
@@ -76,3 +81,10 @@ class Classifier(L.LightningModule):
             "lr_scheduler": scheduler,
             "monitor": "val_loss",
         }
+
+    def _log_examples(self, x: torch.Tensor):
+        fig = plt.figure(figsize=(6.4, 6.4))
+        plt.imshow(make_grid(x).cpu().numpy().transpose(1, 2, 0))
+        plt.axis("off")
+        self.logger.experiment.log_figure(self.logger.run_id, fig, "examples.png")
+        plt.close()
