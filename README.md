@@ -14,12 +14,12 @@ Instead of using an Azure Machine Learning workspace as an MLflow server, you ca
 
 ```python
 python src/ml/train.py  \
-    dataset_dir=~/Downloads \
-    mlflow_tracking_uri=sqlite:////path/to/mlruns.db \
+    dataset_dir=/absolute/path/to/parent/directory \
+    mlflow_tracking_uri=sqlite:////absolute/path/to/mlruns.db \
     fast_dev_run=True
 ```
 
-For more details see [Tracking Experiments with a Local Database](https://mlflow.org/docs/latest/tracking/tutorials/local-database.html).
+Note that enabling `fast_dev_run` mode disables logging and runs only a single training and validation batch, so you won't see anything until it's disabled. For more details see [Tracking Experiments with a Local Database](https://mlflow.org/docs/latest/tracking/tutorials/local-database.html).
 
 ## Running with an Azure Backend
 
