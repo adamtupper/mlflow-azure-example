@@ -2,7 +2,7 @@
 
 import lightning as L
 import torch
-from torchmetrics.classification import Accuracy, ConfusionMatrix
+from torchmetrics.classification import Accuracy, ConfusionMatrix, AveragePrecision
 
 
 class Classifier(L.LightningModule):
@@ -15,7 +15,9 @@ class Classifier(L.LightningModule):
 
         # Scalar metrics
         self.train_acc = Accuracy(task="multiclass", num_classes=self.num_classes)
+        self.train_map = AveragePrecision(task="multiclass", num_classes=self.num_classes)  # Mean avg. precision (mAP)
         self.val_acc = Accuracy(task="multiclass", num_classes=self.num_classes)
+        self.val_map = AveragePrecision(task="multiclass", num_classes=self.num_classes)
 
         # Complex metrics
         self.confusion_matrix = ConfusionMatrix(task="multiclass", num_classes=self.num_classes)
@@ -31,12 +33,15 @@ class Classifier(L.LightningModule):
 
         self.log("train_loss", loss)
         self.train_acc(y_hat, y)
+        self.train_map(y_hat, y)
         self.log("train_acc_step", self.train_acc)
+        self.log("train_ap_step", self.train_map)
 
         return loss
 
     def on_train_epoch_end(self):
         self.log("train_acc_epoch", self.train_acc)
+        self.log("train_ap_epoch", self.train_map)
 
     def validation_step(self, batch: torch.Tensor, batch_idx: int) -> torch.Tensor:
         x, y = batch
@@ -46,6 +51,7 @@ class Classifier(L.LightningModule):
         self.log("val_loss", loss)
 
         self.val_acc(y_hat, y)
+        self.val_map(y_hat, y)
         self.confusion_matrix(y_hat, y)
 
         return loss
@@ -53,6 +59,7 @@ class Classifier(L.LightningModule):
     def on_validation_epoch_end(self):
         # Log scalar metrics
         self.log("val_acc_epoch", self.val_acc)
+        self.log("val_ap_epoch", self.val_map)
 
         # Log confusion matrix
         fig, _ = self.confusion_matrix.plot()
