@@ -3,7 +3,7 @@ hydra:
     chdir: True
 
 seed: 123456
-batch_size: 32
+batch_size: 64
 max_epochs: 20
 lr: 1e-5
 inverse_weighted_sampling: False
