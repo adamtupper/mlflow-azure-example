@@ -1,6 +1,7 @@
 """Define a PyTorch Lightning module for training a multi-class classification model."""
 
 import lightning as L
+import matplotlib.pyplot as plt
 import torch
 from torchmetrics.classification import Accuracy, ConfusionMatrix, AveragePrecision
 
@@ -64,6 +65,7 @@ class Classifier(L.LightningModule):
         # Log confusion matrix
         fig, _ = self.confusion_matrix.plot()
         self.logger.experiment.log_figure(self.logger.run_id, fig, "confusion_matrix.png")
+        plt.close()
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
