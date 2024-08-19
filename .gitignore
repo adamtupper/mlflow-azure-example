@@ -168,3 +168,4 @@ cython_debug/
 # Training artifacts
 outputs/
 mlruns.db
+*.npz

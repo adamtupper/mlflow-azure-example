@@ -1,7 +1,9 @@
 # azureml-mlflow==1.57.0
 hydra-core==1.3.2
+ipykernel==6.29.5
 lightning==2.4.0
-medmnist
+medmnist==3.0.1
 mlflow==2.15.1
+seaborn==0.13.2
 torch==2.4.0
 torchvision==0.19.0
