@@ -3,7 +3,7 @@ hydra:
     chdir: True
 
 batch_size: 32
-max_epochs: 10
+max_epochs: 20
 lr: 1e-5
 fast_dev_run: False
 dataloader_workers: 7
