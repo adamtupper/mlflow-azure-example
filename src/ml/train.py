@@ -27,6 +27,8 @@ NUM_CLASSES = 5
 def main(cfg: DictConfig) -> None:
     print(OmegaConf.to_yaml(cfg))
 
+    L.seed_everything(cfg.seed)
+
     # Define the training and validation transforms
     transform_train = transforms.Compose(
         [

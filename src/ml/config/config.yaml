@@ -2,6 +2,7 @@ hydra:
   job:
     chdir: True
 
+seed: 123456
 batch_size: 32
 max_epochs: 20
 lr: 1e-5
