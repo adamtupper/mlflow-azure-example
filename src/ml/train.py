@@ -71,6 +71,7 @@ def main(cfg: DictConfig) -> None:
     )
 
     mlf_logger = MLFlowLogger(experiment_name="lightning_logs", tracking_uri=cfg.mlflow_tracking_uri)
+    mlf_logger.log_hyperparams(OmegaConf.to_object(cfg))
     trainer = L.Trainer(
         max_epochs=cfg.max_epochs,
         fast_dev_run=cfg.fast_dev_run,
