@@ -1,0 +1,13 @@
+{
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "workspaceFolder": "/home/developer/workspace",
+    "workspaceMount": "source=remote-workspace-mlflow-azure-example,target=/home/developer/workspace,type=volume",
+    "runArgs": [
+        "--gpus=all",
+        "--ipc=host"
+    ],
+    "remoteUser": "developer",
+    "postCreateCommand": "cd /home/developer/workspace && git clone --recursive git@github.com:adamtupper/mlflow-azure-example.git && cd mlflow-azure-example/.devcontainer && bash post_create_script.sh"
+}
