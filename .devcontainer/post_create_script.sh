@@ -9,4 +9,4 @@ source .env/bin/activate
 pip install --upgrade pip
 
 # Install PyTorch
-pip install --index-url https://download.pytorch.org/whl/cu118 -r requirements.txt
+pip install --extra-index-url https://download.pytorch.org/whl/cu118 -r requirements.txt
