@@ -12,12 +12,13 @@ Usage:
 import hydra
 import lightning as L
 import medmnist
+import numpy as np
 import torch
 import torchvision.transforms.v2 as transforms
 from lightning.pytorch.loggers import MLFlowLogger
 from models.classifier import Classifier
 from omegaconf import DictConfig, OmegaConf
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, WeightedRandomSampler
 from torchvision.models import ResNet18_Weights, resnet18
 
 NUM_CLASSES = 5
@@ -52,6 +53,17 @@ def main(cfg: DictConfig) -> None:
         split="val", download=True, size=224, transform=transform_val, root=cfg.dataset_dir
     )
 
+    # Weighted random sampling
+    train_labels = train_dataset.labels.flatten()
+    if cfg.inverse_weighted_sampling:
+        class_sample_count = np.array([len(np.where(train_labels == t)[0]) for t in np.unique(train_labels)])
+        class_weights = 1.0 / class_sample_count
+    else:
+        class_weights = np.ones_like(np.unique(train_labels))
+
+    train_sample_weights = np.array([class_weights[t] for t in train_labels])
+    train_sample_weights = torch.from_numpy(train_sample_weights).double()
+
     # Load the pre-trained ResNet-18 model (modify the output layer to match the number of classes in the RetinaMNIST
     # dataset)
     model = resnet18(weights=ResNet18_Weights.DEFAULT)
@@ -62,8 +74,8 @@ def main(cfg: DictConfig) -> None:
     train_loader = DataLoader(
         train_dataset,
         batch_size=cfg.batch_size,
-        shuffle=True,
         num_workers=cfg.dataloader_workers,
+        sampler=WeightedRandomSampler(train_sample_weights, len(train_sample_weights)),
     )
     val_loader = DataLoader(
         val_dataset,
@@ -74,6 +86,7 @@ def main(cfg: DictConfig) -> None:
 
     mlf_logger = MLFlowLogger(experiment_name="lightning_logs", tracking_uri=cfg.mlflow_tracking_uri)
     mlf_logger.log_hyperparams(OmegaConf.to_object(cfg))
+    mlf_logger.log_hyperparams({f"class_weight_{i}": w for i, w in enumerate(class_weights)})
     trainer = L.Trainer(
         max_epochs=cfg.max_epochs,
         fast_dev_run=cfg.fast_dev_run,

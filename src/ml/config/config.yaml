@@ -6,6 +6,8 @@ seed: 123456
 batch_size: 32
 max_epochs: 20
 lr: 1e-5
+inverse_weighted_sampling: False
+
 fast_dev_run: False
 dataloader_workers: 7
 dataset_dir: ???
