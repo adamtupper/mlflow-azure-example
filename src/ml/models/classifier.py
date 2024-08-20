@@ -3,7 +3,7 @@
 import lightning as L
 import matplotlib.pyplot as plt
 import torch
-from torchmetrics.classification import Accuracy, AveragePrecision, ConfusionMatrix
+from torchmetrics.classification import Accuracy, AveragePrecision, ConfusionMatrix, PrecisionRecallCurve
 from torchvision.utils import make_grid
 
 
@@ -20,6 +20,7 @@ class Classifier(L.LightningModule):
         self.train_map = AveragePrecision(task="multiclass", num_classes=self.num_classes)  # Mean avg. precision (mAP)
         self.val_acc = Accuracy(task="multiclass", num_classes=self.num_classes)
         self.val_map = AveragePrecision(task="multiclass", num_classes=self.num_classes)
+        self.val_pr_curve = PrecisionRecallCurve(task="multiclass", num_classes=self.num_classes)
 
         # Complex metrics
         self.confusion_matrix = ConfusionMatrix(task="multiclass", num_classes=self.num_classes)
@@ -59,6 +60,7 @@ class Classifier(L.LightningModule):
         self.val_acc(y_hat, y)
         self.val_map(y_hat, y)
         self.confusion_matrix(y_hat, y)
+        self.val_pr_curve(y_hat, y)
 
         return loss
 
@@ -70,6 +72,11 @@ class Classifier(L.LightningModule):
         # Log confusion matrix
         fig, _ = self.confusion_matrix.plot()
         self.logger.experiment.log_figure(self.logger.run_id, fig, "confusion_matrix.png")
+        plt.close()
+
+        # Log precision-recall curve
+        fig, _ = self.val_pr_curve.plot()
+        self.logger.experiment.log_figure(self.logger.run_id, fig, "pr_curve.png")
         plt.close()
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
