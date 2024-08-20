@@ -1,4 +1,15 @@
-"""Evaluate a ResNet-18 model on the RetinaMNIST dataset."""
+"""Evaluate a ResNet-18 model on the RetinaMNIST dataset.
+
+This example uses Hydra to manage the configuration. For information on Hydra, see https://hydra.cc/.
+
+Usage:
+
+    python test.py
+        dataset_dir=/path/to/dataset
+        mlflow_tracking_uri=$(az ml workspace show --query mlflow_tracking_uri)
+        mlflow_experiment=retina_mnist
+        mlflow_run_id=...
+"""
 
 import hydra
 import lightning as L

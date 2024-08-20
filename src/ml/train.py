@@ -5,8 +5,9 @@ This example uses Hydra to manage the configuration. For information on Hydra, s
 Usage:
 
     python train.py
-        dataset_dir=~/Downloads
+        dataset_dir=/path/to/dataset
         mlflow_tracking_uri=$(az ml workspace show --query mlflow_tracking_uri)
+        mlflow_experiment=retina_mnist
 """
 
 import subprocess
