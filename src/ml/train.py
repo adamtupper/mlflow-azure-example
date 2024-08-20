@@ -98,11 +98,7 @@ def main(cfg: DictConfig) -> None:
     )
 
     # Train the model
-    trainer = L.Trainer(
-        max_epochs=cfg.max_epochs,
-        fast_dev_run=cfg.fast_dev_run,
-        log_every_n_steps=10,
-    )
+    trainer = L.Trainer(max_epochs=cfg.max_epochs, fast_dev_run=cfg.fast_dev_run)
 
     mlflow.pytorch.autolog(
         log_every_n_step=10,
