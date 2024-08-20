@@ -46,7 +46,8 @@ def main(cfg: DictConfig) -> None:
 
     mlflow.pytorch.autolog()
     with mlflow.start_run(run_id=cfg.mlflow_run_id) as run:  # noqa: F841
-        trainer.test(classifier, test_dataloader)
+        metrics = trainer.test(classifier, test_dataloader)[0]
+        mlflow.log_metrics(metrics)
 
 
 if __name__ == "__main__":
