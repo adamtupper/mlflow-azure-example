@@ -15,6 +15,7 @@ import medmnist
 import numpy as np
 import torch
 import torchvision.transforms.v2 as transforms
+from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import MLFlowLogger
 from models.classifier import Classifier
 from omegaconf import DictConfig, OmegaConf
@@ -84,14 +85,25 @@ def main(cfg: DictConfig) -> None:
         num_workers=cfg.dataloader_workers,
     )
 
-    mlf_logger = MLFlowLogger(experiment_name="lightning_logs", tracking_uri=cfg.mlflow_tracking_uri)
+    # Configure logging
+    mlf_logger = MLFlowLogger(experiment_name="lightning_logs", tracking_uri=cfg.mlflow_tracking_uri, log_model=True)
     mlf_logger.log_hyperparams(OmegaConf.to_object(cfg))
     mlf_logger.log_hyperparams({f"class_weight_{i}": w for i, w in enumerate(class_weights)})
+
+    # Train the model
     trainer = L.Trainer(
         max_epochs=cfg.max_epochs,
         fast_dev_run=cfg.fast_dev_run,
         logger=mlf_logger,
-        log_every_n_steps=25,
+        log_every_n_steps=10,
+        callbacks=[
+            ModelCheckpoint(
+                monitor="val_map_epoch",
+                mode="max",
+                filename="{epoch}-{step}-{val_loss:.2f}-{val_map_epoch:.2f}",
+                save_weights_only=True,
+            )
+        ],
     )
     trainer.fit(classifier, train_loader, val_loader)
 
