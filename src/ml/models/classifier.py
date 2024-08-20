@@ -4,7 +4,7 @@ import lightning as L
 import matplotlib.pyplot as plt
 import mlflow
 import torch
-from torchmetrics.classification import AUROC, Accuracy, AveragePrecision, ConfusionMatrix, PrecisionRecallCurve
+from torchmetrics.classification import AUROC, Accuracy, ConfusionMatrix, PrecisionRecallCurve
 from torchvision.utils import make_grid
 
 
@@ -18,13 +18,10 @@ class Classifier(L.LightningModule):
 
         # Scalar metrics
         self.train_acc = Accuracy(task="multiclass", num_classes=self.num_classes)
-        self.train_map = AveragePrecision(task="multiclass", num_classes=self.num_classes)  # Mean avg. precision (mAP)
         self.train_auroc = AUROC(task="multiclass", num_classes=self.num_classes)
         self.val_acc = Accuracy(task="multiclass", num_classes=self.num_classes)
-        self.val_map = AveragePrecision(task="multiclass", num_classes=self.num_classes)
         self.val_auroc = AUROC(task="multiclass", num_classes=self.num_classes)
         self.test_acc = Accuracy(task="multiclass", num_classes=self.num_classes)
-        self.test_map = AveragePrecision(task="multiclass", num_classes=self.num_classes)
         self.test_auroc = AUROC(task="multiclass", num_classes=self.num_classes)
 
         # Complex metrics (validation only)
@@ -44,10 +41,8 @@ class Classifier(L.LightningModule):
 
         self.log("train_loss", loss)
         self.train_acc(y_hat, y)
-        self.train_map(y_hat, y)
         self.train_auroc(y_hat, y)
         self.log("train_acc_step", self.train_acc)
-        self.log("train_ap_step", self.train_map)
         self.log("train_auroc_step", self.train_auroc)
 
         if self.current_epoch == 0 and batch_idx == 0:
@@ -58,7 +53,6 @@ class Classifier(L.LightningModule):
 
     def on_train_epoch_end(self):
         self.log("train_acc_epoch", self.train_acc)
-        self.log("train_ap_epoch", self.train_map)
 
     def validation_step(self, batch: torch.Tensor, batch_idx: int) -> torch.Tensor:
         x, y = batch
@@ -68,7 +62,6 @@ class Classifier(L.LightningModule):
         self.log("val_loss", loss)
 
         self.val_acc(y_hat, y)
-        self.val_map(y_hat, y)
         self.val_auroc(y_hat, y)
         self.val_confusion_matrix(y_hat, y)
         self.val_pr_curves(y_hat, y)
@@ -82,7 +75,6 @@ class Classifier(L.LightningModule):
     def on_validation_epoch_end(self):
         # Log scalar metrics
         self.log("val_acc_epoch", self.val_acc)
-        self.log("val_map_epoch", self.val_map)
         self.log("val_auroc_epoch", self.val_auroc)
 
         # Log confusion matrix
@@ -102,7 +94,6 @@ class Classifier(L.LightningModule):
         loss = self.criterion(y_hat, y)
 
         self.test_acc(y_hat, y)
-        self.test_map(y_hat, y)
         self.test_auroc(y_hat, y)
         self.test_confusion_matrix(y_hat, y)
         self.test_pr_curves(y_hat, y)
@@ -112,7 +103,6 @@ class Classifier(L.LightningModule):
     def on_test_epoch_end(self):
         # Log scalar metrics
         self.log("test_acc_epoch", self.test_acc)
-        self.log("test_map_epoch", self.test_map)
         self.log("test_auroc_epoch", self.test_auroc)
 
         # Log confusion matrix

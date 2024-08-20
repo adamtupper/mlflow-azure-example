@@ -97,9 +97,9 @@ def main(cfg: DictConfig) -> None:
         log_every_n_steps=10,
         callbacks=[
             ModelCheckpoint(
-                monitor="val_map_epoch",
+                monitor="val_auroc_epoch",
                 mode="max",
-                filename="{epoch}-{step}-{val_loss:.2f}-{val_map_epoch:.2f}",
+                filename="{epoch}-{step}-{val_loss:.2f}-{val_auroc_epoch:.2f}",
                 save_weights_only=True,
             )
         ],
