@@ -18,7 +18,6 @@ import mlflow
 import numpy as np
 import torch
 import torchvision.transforms.v2 as transforms
-from lightning.pytorch.callbacks import ModelCheckpoint
 from models.classifier import Classifier
 from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, WeightedRandomSampler
@@ -103,17 +102,16 @@ def main(cfg: DictConfig) -> None:
         max_epochs=cfg.max_epochs,
         fast_dev_run=cfg.fast_dev_run,
         log_every_n_steps=10,
-        callbacks=[
-            ModelCheckpoint(
-                monitor="val_auroc_epoch",
-                mode="max",
-                filename="{epoch}-{step}-{val_loss:.2f}-{val_auroc_epoch:.2f}",
-                save_weights_only=True,
-            )
-        ],
     )
 
-    mlflow.pytorch.autolog(log_every_n_step=10, checkpoint=True)
+    mlflow.pytorch.autolog(
+        log_every_n_step=10,
+        checkpoint=True,
+        checkpoint_monitor="val_auroc_epoch",
+        checkpoint_save_best_only=True,
+        checkpoint_mode="max",
+        checkpoint_save_weights_only=True,
+    )
     with mlflow.start_run(
         log_system_metrics=True,
         tags={
