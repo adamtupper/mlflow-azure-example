@@ -37,13 +37,21 @@ def main(cfg: DictConfig) -> None:
     L.seed_everything(cfg.seed)
 
     # Define the training and validation transforms
-    transform_train = transforms.Compose(
-        [
-            transforms.RandAugment(),
-            transforms.ToImage(),
-            transforms.ToDtype(torch.float32, scale=True),
-        ]
-    )
+    if cfg.randaugment:
+        transform_train = transforms.Compose(
+            [
+                transforms.RandAugment(),
+                transforms.ToImage(),
+                transforms.ToDtype(torch.float32, scale=True),
+            ]
+        )
+    else:
+        transform_train = transforms.Compose(
+            [
+                transforms.ToImage(),
+                transforms.ToDtype(torch.float32, scale=True),
+            ]
+        )
     transform_val = transforms.Compose(
         [
             transforms.ToImage(),

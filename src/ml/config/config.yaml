@@ -7,6 +7,7 @@ batch_size: 64
 max_epochs: 30
 lr: 1e-5
 inverse_weighted_sampling: False
+randaugment: True
 
 fast_dev_run: False
 dataloader_workers: 7
