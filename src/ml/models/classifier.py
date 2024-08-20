@@ -67,7 +67,7 @@ class Classifier(L.LightningModule):
     def on_validation_epoch_end(self):
         # Log scalar metrics
         self.log("val_acc_epoch", self.val_acc)
-        self.log("val_ap_epoch", self.val_map)
+        self.log("val_map_epoch", self.val_map)
 
         # Log confusion matrix
         fig, _ = self.confusion_matrix.plot()
@@ -76,7 +76,7 @@ class Classifier(L.LightningModule):
 
         # Log precision-recall curve
         fig, _ = self.val_pr_curve.plot()
-        self.logger.experiment.log_figure(self.logger.run_id, fig, "pr_curve.png")
+        self.logger.experiment.log_figure(self.logger.run_id, fig, "pr_curves.png")
         plt.close()
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
