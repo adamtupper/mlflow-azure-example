@@ -49,6 +49,10 @@ def main(cfg: DictConfig) -> None:
         metrics = trainer.test(classifier, test_dataloader)[0]
         mlflow.log_metrics(metrics)
 
+        if cfg.mlflow_register_model:
+            result = mlflow.register_model(f"runs:/{cfg.mlflow_run_id}/model", cfg.mlflow_register_model)
+            print(result)
+
 
 if __name__ == "__main__":
     main()

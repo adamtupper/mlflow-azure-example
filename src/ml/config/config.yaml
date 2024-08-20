@@ -16,3 +16,4 @@ mlflow_experiment: ???
 
 # For evaluating a particular model using `test.py`
 mlflow_run_id: null
+mlflow_register_model: null
