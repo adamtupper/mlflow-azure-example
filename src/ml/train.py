@@ -12,11 +12,11 @@ Usage:
 import hydra
 import lightning as L
 import medmnist
+import mlflow
 import numpy as np
 import torch
 import torchvision.transforms.v2 as transforms
 from lightning.pytorch.callbacks import ModelCheckpoint
-from lightning.pytorch.loggers import MLFlowLogger
 from models.classifier import Classifier
 from omegaconf import DictConfig, OmegaConf
 from torch.utils.data import DataLoader, WeightedRandomSampler
@@ -28,6 +28,9 @@ NUM_CLASSES = 5
 @hydra.main(version_base=None, config_path="./config", config_name="config")
 def main(cfg: DictConfig) -> None:
     print(OmegaConf.to_yaml(cfg))
+
+    mlflow.set_tracking_uri(cfg.mlflow_tracking_uri)
+    mlflow.set_experiment(cfg.mlflow_experiment)
 
     L.seed_everything(cfg.seed)
 
@@ -85,16 +88,10 @@ def main(cfg: DictConfig) -> None:
         num_workers=cfg.dataloader_workers,
     )
 
-    # Configure logging
-    mlf_logger = MLFlowLogger(experiment_name="lightning_logs", tracking_uri=cfg.mlflow_tracking_uri, log_model=True)
-    mlf_logger.log_hyperparams(OmegaConf.to_object(cfg))
-    mlf_logger.log_hyperparams({f"class_weight_{i}": w for i, w in enumerate(class_weights)})
-
     # Train the model
     trainer = L.Trainer(
         max_epochs=cfg.max_epochs,
         fast_dev_run=cfg.fast_dev_run,
-        logger=mlf_logger,
         log_every_n_steps=10,
         callbacks=[
             ModelCheckpoint(
@@ -105,7 +102,10 @@ def main(cfg: DictConfig) -> None:
             )
         ],
     )
-    trainer.fit(classifier, train_loader, val_loader)
+
+    mlflow.pytorch.autolog(checkpoint=True)
+    with mlflow.start_run() as run:  # noqa: F841
+        trainer.fit(classifier, train_loader, val_loader)
 
 
 if __name__ == "__main__":

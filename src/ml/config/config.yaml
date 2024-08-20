@@ -12,3 +12,7 @@ fast_dev_run: False
 dataloader_workers: 7
 dataset_dir: ???
 mlflow_tracking_uri: ???
+mlflow_experiment: ???
+
+# For evaluating a particular model using `test.py`
+mlflow_run_id: null

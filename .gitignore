@@ -166,6 +166,8 @@ cython_debug/
 .python-version
 
 # Training artifacts
+mlruns/
+mlartifacts/
 outputs/
 multirun/
 mlruns.db
