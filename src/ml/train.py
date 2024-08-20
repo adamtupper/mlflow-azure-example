@@ -9,6 +9,8 @@ Usage:
         mlflow_tracking_uri=$(az ml workspace show --query mlflow_tracking_uri)
 """
 
+import subprocess
+
 import hydra
 import lightning as L
 import medmnist
@@ -104,7 +106,13 @@ def main(cfg: DictConfig) -> None:
     )
 
     mlflow.pytorch.autolog(log_every_n_step=10, checkpoint=True)
-    with mlflow.start_run(log_system_metrics=True) as run:  # noqa: F841
+    with mlflow.start_run(
+        log_system_metrics=True,
+        tags={
+            "repo": subprocess.check_output("git remote get-url origin", shell=True),
+            "commit": subprocess.check_output("git rev-parse --short HEAD", shell=True),
+        },
+    ) as run:  # noqa: F841
         mlflow.log_params(OmegaConf.to_container(cfg))
         mlflow.log_params({f"class_weight_{i}": w for i, w in enumerate(class_weights)})
 
