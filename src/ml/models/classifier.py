@@ -4,7 +4,7 @@ import lightning as L
 import matplotlib.pyplot as plt
 import mlflow
 import torch
-from torchmetrics.classification import AUROC, Accuracy, ConfusionMatrix, PrecisionRecallCurve
+from torchmetrics.classification import AUROC, ROC, Accuracy, ConfusionMatrix
 from torchvision.utils import make_grid
 
 
@@ -25,9 +25,9 @@ class Classifier(L.LightningModule):
         self.test_auroc = AUROC(task="multiclass", num_classes=self.num_classes)
 
         # Complex metrics (validation only)
-        self.val_pr_curves = PrecisionRecallCurve(task="multiclass", num_classes=self.num_classes)
+        self.val_roc_curves = ROC(task="multiclass", num_classes=self.num_classes)
         self.val_confusion_matrix = ConfusionMatrix(task="multiclass", num_classes=self.num_classes)
-        self.test_pr_curves = PrecisionRecallCurve(task="multiclass", num_classes=self.num_classes)
+        self.test_roc_curves = ROC(task="multiclass", num_classes=self.num_classes)
         self.test_confusion_matrix = ConfusionMatrix(task="multiclass", num_classes=self.num_classes)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -64,7 +64,7 @@ class Classifier(L.LightningModule):
         self.val_acc(y_hat, y)
         self.val_auroc(y_hat, y)
         self.val_confusion_matrix(y_hat, y)
-        self.val_pr_curves(y_hat, y)
+        self.val_roc_curves(y_hat, y)
 
         if self.current_epoch == 0 and batch_idx == 0:
             # Log the first batch of images
@@ -83,8 +83,8 @@ class Classifier(L.LightningModule):
         plt.close()
 
         # Log precision-recall curve
-        fig, _ = self.val_pr_curves.plot()
-        mlflow.log_figure(fig, "val_pr_curves.png")
+        fig, _ = self.val_roc_curves.plot()
+        mlflow.log_figure(fig, "val_roc_curves.png")
         plt.close()
 
     def test_step(self, batch: torch.Tensor, batch_idx: int) -> torch.Tensor:
@@ -96,7 +96,7 @@ class Classifier(L.LightningModule):
         self.test_acc(y_hat, y)
         self.test_auroc(y_hat, y)
         self.test_confusion_matrix(y_hat, y)
-        self.test_pr_curves(y_hat, y)
+        self.test_roc_curves(y_hat, y)
 
         return loss
 
@@ -111,8 +111,8 @@ class Classifier(L.LightningModule):
         plt.close()
 
         # Log precision-recall curve
-        fig, _ = self.test_pr_curves.plot()
-        mlflow.log_figure(fig, "test_pr_curves.png")
+        fig, _ = self.test_roc_curves.plot()
+        mlflow.log_figure(fig, "test_roc_curves.png")
         plt.close()
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
