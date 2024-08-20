@@ -103,8 +103,11 @@ def main(cfg: DictConfig) -> None:
         ],
     )
 
-    mlflow.pytorch.autolog(checkpoint=True)
+    mlflow.pytorch.autolog(log_every_n_step=10, checkpoint=True)
     with mlflow.start_run() as run:  # noqa: F841
+        mlflow.log_params(OmegaConf.to_container(cfg))
+        mlflow.log_params({f"class_weight_{i}": w for i, w in enumerate(class_weights)})
+
         trainer.fit(classifier, train_loader, val_loader)
 
 
