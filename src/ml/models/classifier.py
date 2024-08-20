@@ -3,7 +3,7 @@
 import lightning as L
 import matplotlib.pyplot as plt
 import torch
-from torchmetrics.classification import Accuracy, AveragePrecision, ConfusionMatrix, PrecisionRecallCurve
+from torchmetrics.classification import AUROC, Accuracy, AveragePrecision, ConfusionMatrix, PrecisionRecallCurve
 from torchvision.utils import make_grid
 
 
@@ -18,11 +18,13 @@ class Classifier(L.LightningModule):
         # Scalar metrics
         self.train_acc = Accuracy(task="multiclass", num_classes=self.num_classes)
         self.train_map = AveragePrecision(task="multiclass", num_classes=self.num_classes)  # Mean avg. precision (mAP)
+        self.train_auroc = AUROC(task="multiclass", num_classes=self.num_classes)
         self.val_acc = Accuracy(task="multiclass", num_classes=self.num_classes)
         self.val_map = AveragePrecision(task="multiclass", num_classes=self.num_classes)
-        self.val_pr_curve = PrecisionRecallCurve(task="multiclass", num_classes=self.num_classes)
+        self.val_auroc = AUROC(task="multiclass", num_classes=self.num_classes)
 
-        # Complex metrics
+        # Complex metrics (validation only)
+        self.pr_curves = PrecisionRecallCurve(task="multiclass", num_classes=self.num_classes)
         self.confusion_matrix = ConfusionMatrix(task="multiclass", num_classes=self.num_classes)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -37,8 +39,10 @@ class Classifier(L.LightningModule):
         self.log("train_loss", loss)
         self.train_acc(y_hat, y)
         self.train_map(y_hat, y)
+        self.train_auroc(y_hat, y)
         self.log("train_acc_step", self.train_acc)
         self.log("train_ap_step", self.train_map)
+        self.log("train_auroc_step", self.train_auroc)
 
         if self.current_epoch == 0 and batch_idx == 0:
             # Log the first batch of images
@@ -59,8 +63,9 @@ class Classifier(L.LightningModule):
 
         self.val_acc(y_hat, y)
         self.val_map(y_hat, y)
+        self.val_auroc(y_hat, y)
         self.confusion_matrix(y_hat, y)
-        self.val_pr_curve(y_hat, y)
+        self.pr_curves(y_hat, y)
 
         return loss
 
@@ -68,6 +73,7 @@ class Classifier(L.LightningModule):
         # Log scalar metrics
         self.log("val_acc_epoch", self.val_acc)
         self.log("val_map_epoch", self.val_map)
+        self.log("val_auroc_epoch", self.val_auroc)
 
         # Log confusion matrix
         fig, _ = self.confusion_matrix.plot()
@@ -75,7 +81,7 @@ class Classifier(L.LightningModule):
         plt.close()
 
         # Log precision-recall curve
-        fig, _ = self.val_pr_curve.plot()
+        fig, _ = self.pr_curves.plot()
         self.logger.experiment.log_figure(self.logger.run_id, fig, "pr_curves.png")
         plt.close()
 
