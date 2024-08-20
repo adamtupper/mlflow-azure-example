@@ -3,7 +3,7 @@
 import lightning as L
 import matplotlib.pyplot as plt
 import torch
-from torchmetrics.classification import Accuracy, ConfusionMatrix, AveragePrecision
+from torchmetrics.classification import Accuracy, AveragePrecision, ConfusionMatrix
 from torchvision.utils import make_grid
 
 

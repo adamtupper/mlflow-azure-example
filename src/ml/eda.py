@@ -10,9 +10,7 @@ import seaborn as sns
 # Load the dataset
 DATASET_DIR = "~/Downloads"
 
-train_dataset = medmnist.RetinaMNIST(
-    split="train", download=True, size=224, root="../.."
-)
+train_dataset = medmnist.RetinaMNIST(split="train", download=True, size=224, root="../..")
 val_dataset = medmnist.RetinaMNIST(split="val", download=True, size=224, root="../..")
 test_dataset = medmnist.RetinaMNIST(split="test", download=True, size=224, root="../..")
 
